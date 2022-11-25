@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 import PokemonCards from './PokemonCards';
 
@@ -8,8 +9,11 @@ import PokemonCards from './PokemonCards';
 const Pokedex = () => {
   const userName = useSelector(state => state.name)
   const [pokemon, setPokemon] = useState([]);
+  const [pokeName, setPokeName] = useState('');
 
+  const [typePokemon, setTypePokemon] = useState([]);
 
+  const navigate = useNavigate();
 
 
 
@@ -18,7 +22,15 @@ const Pokedex = () => {
     axios.get('https://pokeapi.co/api/v2/pokemon/?offset=0&limit=1154')
       //https://pokeapi.co/api/v2/pokemon/?offset=0&limit=1154
       .then(res => setPokemon(res.data.results))
+
+    axios.get('https://pokeapi.co/api/v2/type')
+      .then(res => setTypePokemon(res.data.results))
   }, [])
+  console.log(typePokemon);
+  const searchPokedex = () => {
+    //alert(pokeName)
+    navigate(`/pokedex/${pokeName.toLocaleLowerCase()}`)
+  }
   //console.log(pokemon)
   const [page, setPage] = useState(1);
   const pokemonPerPage = 5;
@@ -33,12 +45,37 @@ const Pokedex = () => {
     numbers.push(i);
   }
   console.log(numbers)
+
+  const filterType = (url) => {
+    //const url = e.target.value;
+    //alert(e.target.value);
+    axios.get(url)
+      .then(res => console.log(res.data.pokemon));////////////////////////////////////////////////////////////////////////////////////////video 02:02:31
+  }
+
   return (
     <div >
       <h1>POKEDEX</h1>
       <p>Welcome {userName}!, here you can find your favorite pokemon</p>
-      <input type="text" placeholder='Search pokemon'/>
-      <button>Search</button>
+      <input
+        type="text"
+        placeholder='Search pokemon'
+        value={pokeName}
+        onChange={e => setPokeName(e.target.value)}
+      />
+      <button onClick={searchPokedex}>Search</button>
+
+      <select onChange={e => filterType(e.target.value)} name="" id="">
+        {typePokemon.map(typePoke => (
+          <option
+            value={typePoke.url}
+            key={typePoke.name}>
+            {typePoke.name}
+          </option>
+        ))}
+
+      </select>
+
       <div>
         <button onClick={() => setPage(page - 1)} disabled={page === 1}>Prev page
         </button>
@@ -51,7 +88,12 @@ const Pokedex = () => {
 
 
       {pokemonPaginated.map(poke => (
-        <PokemonCards url={poke.url} />
+        <PokemonCards 
+        url={poke.url ? poke.url : poke}
+        key={poke.url ? poke.url : poke}
+        //url={poke.url} 
+        //key={poke.url} 
+        />
 
 
       ))}
